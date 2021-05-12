@@ -1,0 +1,88 @@
+2020-07-02 10:25:33.322879: I tensorflow/core/platform/cpu_feature_guard.cc:145] This TensorFlow binary is optimized with Intel(R) MKL-DNN to use the following CPU instructions in performance critical operations:  SSE4.1 SSE4.2 AVX AVX2 AVX512F FMA
+To enable them in non-MKL-DNN operations, rebuild TensorFlow with the appropriate compiler flags.
+2020-07-02 10:25:33.350739: I tensorflow/core/platform/profile_utils/cpu_utils.cc:94] CPU Frequency: 2600000000 Hz
+2020-07-02 10:25:33.355895: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x5576aae5dea0 executing computations on platform Host. Devices:
+2020-07-02 10:25:33.355951: I tensorflow/compiler/xla/service/service.cc:175]   StreamExecutor device (0): Host, Default Version
+2020-07-02 10:25:33.356121: I tensorflow/core/common_runtime/process_util.cc:115] Creating new thread pool with default inter op setting: 9. Tune using inter_op_parallelism_threads for best performance.
+WARNING:tensorflow:Output lambda missing from loss dictionary. We assume this was done on purpose. The fit and evaluate APIs will not be expecting any data to be passed to lambda.
+Epoch 1/5
+5801/5801 - 106s - loss: 1.2609
+Epoch 2/5
+5801/5801 - 97s - loss: 1.2101
+Epoch 3/5
+5801/5801 - 96s - loss: 1.2062
+Epoch 4/5
+5801/5801 - 97s - loss: 1.2065
+Epoch 5/5
+5801/5801 - 97s - loss: 1.2065
+1450/1450 - 16s
+2020-07-02 10:34:03.052657: W tensorflow/python/util/util.cc:299] Sets are not currently considered sequences, but this may change in the future, so consider avoiding using them.
+WARNING:tensorflow:From /home/dhbrookes/anaconda3/envs/schaffer_env/lib/python3.7/site-packages/tensorflow_core/python/ops/resource_variable_ops.py:1781: calling BaseResourceVariable.__init__ (from tensorflow.python.ops.resource_variable_ops) with constraint is deprecated and will be removed in a future version.
+Instructions for updating:
+If using Keras pass *_constraint arguments to layers.
+2020-07-02 10:34:56.703357: I tensorflow/core/platform/cpu_feature_guard.cc:145] This TensorFlow binary is optimized with Intel(R) MKL-DNN to use the following CPU instructions in performance critical operations:  SSE4.1 SSE4.2 AVX AVX2 AVX512F FMA
+To enable them in non-MKL-DNN operations, rebuild TensorFlow with the appropriate compiler flags.
+2020-07-02 10:34:56.738844: I tensorflow/core/platform/profile_utils/cpu_utils.cc:94] CPU Frequency: 2600000000 Hz
+2020-07-02 10:34:56.742210: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x55640eed4b70 executing computations on platform Host. Devices:
+2020-07-02 10:34:56.742245: I tensorflow/compiler/xla/service/service.cc:175]   StreamExecutor device (0): Host, Default Version
+2020-07-02 10:34:56.742358: I tensorflow/core/common_runtime/process_util.cc:115] Creating new thread pool with default inter op setting: 9. Tune using inter_op_parallelism_threads for best performance.
+WARNING:tensorflow:Output lambda missing from loss dictionary. We assume this was done on purpose. The fit and evaluate APIs will not be expecting any data to be passed to lambda.
+Epoch 1/5
+5801/5801 - 262s - loss: 1.1897
+Epoch 2/5
+5801/5801 - 256s - loss: 1.1367
+Epoch 3/5
+5801/5801 - 235s - loss: 1.1292
+Epoch 4/5
+5801/5801 - 253s - loss: 1.1244
+Epoch 5/5
+5801/5801 - 252s - loss: 1.1229
+1450/1450 - 43s
+2020-07-02 10:56:38.576630: W tensorflow/python/util/util.cc:299] Sets are not currently considered sequences, but this may change in the future, so consider avoiding using them.
+WARNING:tensorflow:From /home/dhbrookes/anaconda3/envs/schaffer_env/lib/python3.7/site-packages/tensorflow_core/python/ops/resource_variable_ops.py:1781: calling BaseResourceVariable.__init__ (from tensorflow.python.ops.resource_variable_ops) with constraint is deprecated and will be removed in a future version.
+Instructions for updating:
+If using Keras pass *_constraint arguments to layers.
+2020-07-02 10:57:32.335553: I tensorflow/core/platform/cpu_feature_guard.cc:145] This TensorFlow binary is optimized with Intel(R) MKL-DNN to use the following CPU instructions in performance critical operations:  SSE4.1 SSE4.2 AVX AVX2 AVX512F FMA
+To enable them in non-MKL-DNN operations, rebuild TensorFlow with the appropriate compiler flags.
+2020-07-02 10:57:32.374855: I tensorflow/core/platform/profile_utils/cpu_utils.cc:94] CPU Frequency: 2600000000 Hz
+2020-07-02 10:57:32.380559: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x562d6e3487c0 executing computations on platform Host. Devices:
+2020-07-02 10:57:32.380615: I tensorflow/compiler/xla/service/service.cc:175]   StreamExecutor device (0): Host, Default Version
+2020-07-02 10:57:32.380789: I tensorflow/core/common_runtime/process_util.cc:115] Creating new thread pool with default inter op setting: 9. Tune using inter_op_parallelism_threads for best performance.
+WARNING:tensorflow:Output lambda missing from loss dictionary. We assume this was done on purpose. The fit and evaluate APIs will not be expecting any data to be passed to lambda.
+Epoch 1/5
+5801/5801 - 1191s - loss: 1.1144
+Epoch 2/5
+5801/5801 - 1199s - loss: 1.0509
+Epoch 3/5
+5801/5801 - 1189s - loss: 1.0421
+Epoch 4/5
+5801/5801 - 1193s - loss: 1.0424
+Epoch 5/5
+5801/5801 - 1180s - loss: 1.0396
+1450/1450 - 143s
+2020-07-02 12:39:07.922617: W tensorflow/python/util/util.cc:299] Sets are not currently considered sequences, but this may change in the future, so consider avoiding using them.
+WARNING:tensorflow:From /home/dhbrookes/anaconda3/envs/schaffer_env/lib/python3.7/site-packages/tensorflow_core/python/ops/resource_variable_ops.py:1781: calling BaseResourceVariable.__init__ (from tensorflow.python.ops.resource_variable_ops) with constraint is deprecated and will be removed in a future version.
+Instructions for updating:
+If using Keras pass *_constraint arguments to layers.
+2020-07-02 12:40:01.962876: I tensorflow/core/platform/cpu_feature_guard.cc:145] This TensorFlow binary is optimized with Intel(R) MKL-DNN to use the following CPU instructions in performance critical operations:  SSE4.1 SSE4.2 AVX AVX2 AVX512F FMA
+To enable them in non-MKL-DNN operations, rebuild TensorFlow with the appropriate compiler flags.
+2020-07-02 12:40:01.998989: I tensorflow/core/platform/profile_utils/cpu_utils.cc:94] CPU Frequency: 2600000000 Hz
+2020-07-02 12:40:02.004979: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x5581e737a040 executing computations on platform Host. Devices:
+2020-07-02 12:40:02.005039: I tensorflow/compiler/xla/service/service.cc:175]   StreamExecutor device (0): Host, Default Version
+2020-07-02 12:40:02.005228: I tensorflow/core/common_runtime/process_util.cc:115] Creating new thread pool with default inter op setting: 9. Tune using inter_op_parallelism_threads for best performance.
+WARNING:tensorflow:Output lambda missing from loss dictionary. We assume this was done on purpose. The fit and evaluate APIs will not be expecting any data to be passed to lambda.
+Epoch 1/5
+5801/5801 - 1187s - loss: 1.2199
+Epoch 2/5
+5801/5801 - 1193s - loss: 1.2094
+Epoch 3/5
+5801/5801 - 1190s - loss: 1.2094
+Epoch 4/5
+5801/5801 - 1186s - loss: 1.2094
+Epoch 5/5
+5801/5801 - 1190s - loss: 1.2093
+1450/1450 - 120s
+2020-07-02 14:21:08.084412: W tensorflow/python/util/util.cc:299] Sets are not currently considered sequences, but this may change in the future, so consider avoiding using them.
+WARNING:tensorflow:From /home/dhbrookes/anaconda3/envs/schaffer_env/lib/python3.7/site-packages/tensorflow_core/python/ops/resource_variable_ops.py:1781: calling BaseResourceVariable.__init__ (from tensorflow.python.ops.resource_variable_ops) with constraint is deprecated and will be removed in a future version.
+Instructions for updating:
+If using Keras pass *_constraint arguments to layers.

@@ -1,0 +1,8 @@
+2021-05-11 21:28:09.653782: I tensorflow/core/platform/cpu_feature_guard.cc:145] This TensorFlow binary is optimized with Intel(R) MKL-DNN to use the following CPU instructions in performance critical operations:  SSE4.1 SSE4.2 AVX AVX2 AVX512F FMA
+To enable them in non-MKL-DNN operations, rebuild TensorFlow with the appropriate compiler flags.
+2021-05-11 21:28:09.678802: I tensorflow/core/platform/profile_utils/cpu_utils.cc:94] CPU Frequency: 3100000000 Hz
+2021-05-11 21:28:09.679284: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x55b9bd3cf100 executing computations on platform Host. Devices:
+2021-05-11 21:28:09.679310: I tensorflow/compiler/xla/service/service.cc:175]   StreamExecutor device (0): Host, Default Version
+2021-05-11 21:28:09.679803: I tensorflow/core/common_runtime/process_util.cc:115] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+WARNING:tensorflow:Output output_1 missing from loss dictionary. We assume this was done on purpose. The fit and evaluate APIs will not be expecting any data to be passed to output_1.
+slurmstepd: error: *** JOB 277 ON beef2 CANCELLED AT 2021-05-11T21:30:52 ***
