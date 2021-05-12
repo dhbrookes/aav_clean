@@ -106,6 +106,18 @@ for i in include:
         plot_data = pdi
     for key in plot_data.keys():
         plot_data[key] += pdi[key]
+        
+# Calculate plotting statistics for NNK
+if meta_data['encoding'] == 'pairwise':
+    enc = data_prep.encode_one_plus_pairwise
+elif meta_data['encoding'] == 'is':
+    enc = data_prep.one_hot_encode
+elif meta_data['encoding'] == 'neighbors':
+    enc = data_prep.encode_one_plus_neighbors
+model_path = meta_data['model_path']
+if model_path == "../models/aav5_ann_100_is":
+    model_path = "../models/old_nnk_ann_100_is"
+nnk_stats = opt_analysis.calculate_nnk_stats(model_path, enc, n_samples=10000)
 
 # Load sampling results
 all_samp_results = {}
