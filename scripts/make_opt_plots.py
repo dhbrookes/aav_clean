@@ -142,6 +142,5 @@ ticks = [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3]
 cbar.set_ticks(ticks)
 ticks[-1] = '>%s' % color_vmax
 cbar.set_ticklabels(ticks)
-plt.tight_layout()
-plt.savefig('plots/opt_curve.png', dpi=300)
+plt.savefig('plots/opt_curve.png', dpi=300, bbox_inches='tight', facecolor='white', transparent=False)
     
