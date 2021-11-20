@@ -91,6 +91,13 @@ def load_sampling_data_for_plotting(savefile):
     plot_data = calc_sampling_stats_for_plotting(results, aa=aa, savefile=savefile)
     return plot_data, meta_data, plot_data
 
+
+fancy_labels = {'expected_aa_dist': "Expected Pairwise Distance (Amino Acids)",
+                'expected_nuc_dist': "Expected Pairwise Distance (Nucleotides)",
+                'nuc_entropy': 'Entropy (nucletides)',
+                'aa_entropy': 'Entropy (amino acids)',
+                'mean_enrichment': 'Mean predicted enrichment'}
+
 # Load optimization results
 all_results = {}
 include = [1, 2, 3, 4, 5, 6, 7, 8, 11, 12, 13, 14]

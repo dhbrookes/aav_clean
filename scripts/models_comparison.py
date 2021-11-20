@@ -53,11 +53,11 @@ def calculate_culled_correlation(ypred, ytest, fracs):
 
 
 def make_culled_corr_plot(model_lbls, fracs, cs_dict, plot_params, savefile=None):
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(3, 3))
     for lbl in model_lbls:
         cs = cs_dict[lbl]
         prms = plot_params[lbl]
-        ax.plot(fracs, cs, marker=None,ms=1,lw=1, **prms)
+        ax.plot(fracs, cs,lw=1, **prms)
     ax.set_xlabel("Fraction of top test sequences")
     ax.set_ylabel("Pearson correlation")
     fracs2 = [fracs[i] for i in range(len(fracs)) if i % 10 == 0]

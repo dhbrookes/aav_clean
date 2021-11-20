@@ -1,18 +1,11 @@
 import sys
 import os
 sys.path.append("../src")
-from tensorflow import keras
-import modeling
-from Bio.Seq import Seq
-import pre_process
 import data_prep
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import spearmanr
 import pandas as pd
-from seqtools import SequenceTools
-from functools import reduce
-from tensorflow.keras.models import load_model
 import seaborn as sns
 plt.style.use('seaborn-deep')
 plt.rcParams['figure.dpi'] = 200
@@ -24,7 +17,7 @@ plt.rcParams['grid.alpha'] = 0.2
 
 
 names = ['lib_b', 'lib_c', 'new_nnk', 'old_nnk']
-labels = ['Lib B', 'Lib C', 'New NNK', 'Old NNK']
+labels = ['Lib C', 'Lib D', 'New NNK', 'NNK']
 
 lib_b_nuc = np.array([[0.12,0.04,0.39,0.45], [0.18,0.47,0.3,0.05], [0.21,0.19,0.28,0.32], [0.14,0.02,0.19,0.65],
 [0.23,0.33,0.29,0.15],[0.28,0.24,0.25,0.23],[0.35,0.0,0.14,0.51],[0.13,0.17,0.36,0.34],
@@ -112,19 +105,22 @@ plt.close()
 fig, ax = plt.subplots(figsize=(3, 3))
 colors = sns.color_palette('Set1', n_colors=5)
 for i, nm in enumerate(names):
+    if nm == 'new_nnk':
+        continue
     lbl = labels[i]
     ent_pre, ent_post = ents[nm]
     titer_pre, titer_post = titers[nm]
-    ax.scatter(ent_pre, titer_pre, label="%s pre" % lbl, c = colors[i])
+    ax.scatter(ent_pre, titer_pre, label="%s" % lbl, c = colors[i])
     if titer_post != -1:
         ax.scatter(ent_post, titer_post, label="%s post" % lbl, edgecolor=colors[i], facecolor='none', linewidth=1.5)
     
-ax.set_xlabel("Entropy")
-ax.set_ylabel("Viral Genome (vm/mL)")
+ax.set_xlabel("Entropy of initial library")
+ax.set_ylabel("Viral Genome (vg/mL)")
 # ax.set_xticks([0, 1, 2, 3])
 # ax.set_xticklabels(labels, ha='center', fontsize=8)
 ax.legend()
     
 ax.grid(False)
 plt.tight_layout()
-plt.savefig('plots/entropies_titers.png', dpi=300, transparent=False, bbox_inches='tight', facecolor='white',)
+plt.savefig('plots/entropies_titers.png', dpi=300, transparent=False, 
+            bbox_inches='tight', facecolor='white',)
