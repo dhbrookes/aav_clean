@@ -96,7 +96,7 @@ def get_pre_filepath(name):
     """""
     Returns path to raw FASTQ files for pre-selection library
     """""
-    assert name in ['old_nnk', 'new_nnk', 'lib_b', 'lib_c', 'brain_nnk', 'brain_b', 'neuron_nnk', 'neuron_b', 'microglia_nnk', 'microglia_b', 'glia_nnk', 'glia_b']
+    assert name in ['old_nnk', 'new_nnk', 'lib_b', 'lib_c', 'brain_nnk', 'brain_b', 'neuron_nnk', 'neuron_b', 'microglia_nnk', 'microglia_b', 'glia_nnk', 'glia_b', 'demo']
     data_dir = 'raw' # path from SLURM submit file
     
     if name == 'old_nnk':
@@ -104,6 +104,8 @@ def get_pre_filepath(name):
     elif name.split('_')[0] in ['brain', 'neuron', 'microglia', 'glia']:
         # We currently only have post-infection sequencing data for brain cells
         return None
+    elif name == 'demo':
+        return os.path.join(data_dir, 'demo_pre.fastq')
     else:
         if name == 'lib_b':
             i = 1
@@ -118,7 +120,7 @@ def get_post_filepath(name):
     """""
     Returns path to raw FASTQ files for post-selection library
     """""
-    assert name in ['old_nnk', 'new_nnk', 'lib_b', 'lib_c', 'brain_nnk', 'brain_b', 'neuron_nnk', 'neuron_b', 'microglia_nnk', 'microglia_b', 'glia_nnk', 'glia_b']
+    assert name in ['old_nnk', 'new_nnk', 'lib_b', 'lib_c', 'brain_nnk', 'brain_b', 'neuron_nnk', 'neuron_b', 'microglia_nnk', 'microglia_b', 'glia_nnk', 'glia_b', 'demo']
     data_dir = 'raw' # path from SLURM submit file
     
     if name == 'old_nnk':
@@ -143,6 +145,8 @@ def get_post_filepath(name):
         elif name == 'glia_nnk':
             i = 6
         return os.path.join(data_dir, 'DSBZ00%i_S%i_L002_R1_001.fastq' % (i, i + 10))
+    elif name == 'demo':
+        return os.path.join(data_dir, 'demo_post.fastq')
     else:
         if name == 'lib_b':
             i = 2
@@ -261,7 +265,10 @@ def build_reads_database(lib, pre_or_post, save_file, chunksize=1e6, include_end
             
     df = pd.DataFrame(data)
     df = df.loc[df['primer_mismatches'] >= 0]
-    df.to_csv(save_file, mode='a', header=False, index=False)
+    if first_save:
+        df.to_csv(save_file, index=False)
+    else:
+        df.to_csv(save_file, mode='a', header=False, index=False)
             
             
 def build_counts_database(lib, pre_or_post, reads_file, save_file,
