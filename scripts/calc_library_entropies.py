@@ -3,18 +3,10 @@ import os
 import argparse
 sys.path.append("../src")
 from collections import defaultdict
-from tensorflow import keras
-import modeling
-from Bio.Seq import Seq
-import pre_process
-import data_prep
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.stats import spearmanr
 import pandas as pd
 from seqtools import SequenceTools
-from functools import reduce
-from tensorflow.keras.models import load_model
 import seaborn as sns
 from matplotlib import rcParams, gridspec
 from mpl_toolkits.axes_grid1 import make_axes_locatable
