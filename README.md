@@ -32,7 +32,7 @@ cd data
 python ../src/pre_process.py demo pre -r -c -p 2
 python ../src/pre_process.py demo post -r -c -p 2
 ```
-Pre-processing the 'pre-' and 'post-' selection demo data takes ~50 sec each on a standard computer. The expected outputs of these two steps the following four Pandas DataFrames in CSV file format:
+Pre-processing the 'pre-' and 'post-' selection demo data takes ~0.8 sec each on a standard computer. The expected outputs of these two steps the following four Pandas DataFrames in CSV file format:
  * `reads/demo_pre_reads.csv`
  * `reads/demo_post_reads.csv`
  * `counts/demo_pre_counts.csv`
