@@ -1,6 +1,8 @@
 import sys
 import os
+import argparse
 sys.path.append("../src")
+from collections import defaultdict
 from tensorflow import keras
 import modeling
 from Bio.Seq import Seq
@@ -14,117 +16,300 @@ from seqtools import SequenceTools
 from functools import reduce
 from tensorflow.keras.models import load_model
 import seaborn as sns
+from matplotlib import rcParams, gridspec
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+
+
+# Define plot aesthetics.
 plt.style.use('seaborn-deep')
-plt.rcParams['figure.dpi'] = 200
-plt.rcParams['axes.grid'] = True
-plt.rcParams['axes.spines.right'] = False
-plt.rcParams['axes.spines.top'] = False
-plt.rcParams['grid.color'] = 'gray'
-plt.rcParams['grid.alpha'] = 0.2
+rcParams['figure.dpi'] = 200
+rcParams['savefig.dpi'] = 300
+rcParams['lines.linewidth'] = 1.0
+rcParams['axes.grid'] = True
+rcParams['axes.spines.right'] = True
+rcParams['axes.spines.top'] = True
+rcParams['grid.color'] = 'gray'
+rcParams['grid.alpha'] = 0.2
+rcParams['axes.linewidth'] = 0.5
+rcParams['mathtext.fontset'] = 'cm'
+rcParams['font.family'] = 'STIXGeneral'
 
 
-names = ['lib_b', 'lib_c', 'new_nnk', 'old_nnk']
-labels = ['Lib B', 'Lib C', 'New NNK', 'Old NNK']
+# Determine data location and libraries to include on plots.
+parser = argparse.ArgumentParser()
+parser.add_argument('library_names', help='names of libraries to include on plots', nargs='+', type=str)
+parser.add_argument('data_directory', help='full path to directory containing counts files', type=str)
+args = parser.parse_args()
 
-lib_b_nuc = np.array([[0.12,0.04,0.39,0.45], [0.18,0.47,0.3,0.05], [0.21,0.19,0.28,0.32], [0.14,0.02,0.19,0.65],
-[0.23,0.33,0.29,0.15],[0.28,0.24,0.25,0.23],[0.35,0.0,0.14,0.51],[0.13,0.17,0.36,0.34],
-[0.21,0.31,0.31,0.17],[0.13,0.0,0.06,0.81],[0.26,0.12,0.22,0.4],[0.16,0.29,0.36,0.19],
-[0.09,0.0,0.08,0.83],[0.36,0.12,0.37,0.15],[0.13,0.49,0.24,0.14],[0.22,0.0,0.13,0.65],
-[0.29,0.08,0.24,0.39],[0.1,0.42,0.34,0.14],[0.16,0.01,0.09,0.74],[0.28,0.11,0.47,0.14],
-[0.17,0.35,0.3,0.18]])
+data_dir = '../data/counts/' if args.data_directory is None else args.data_directory
 
-lib_c_nuc = np.array([[0.21,0.09,0.43,0.27],[0.22,0.25,0.37,0.16],[0.25,0.28,0.27,0.2],[0.27,0.12,0.13,0.48],
-[0.2,0.35,0.27,0.18],[0.22,0.23,0.22,0.33],[0.22,0.08,0.16,0.54],[0.32,0.19,0.34,0.15],
-[0.25,0.17,0.27,0.31],[0.24,0.07,0.43,0.26],[0.34,0.35,0.2,0.11],[0.22,0.26,0.28,0.24],
-[0.28,0.06,0.17,0.49],[0.45,0.14,0.29,0.12],[0.2,0.27,0.3,0.23],[0.32,0.08,0.19,0.41],
-[0.23,0.2,0.35,0.22],[0.23,0.27,0.36,0.14],[0.2,0.04,0.32,0.44],[0.39,0.17,0.3,0.14],
-[0.26,0.25,0.24,0.25]])
+names_to_labels = {'lib_b': 'Library D2', 'lib_c': 'Library D3', 'old_nnk': 'NNK'}
+names = ['lib_b', 'lib_c', 'old_nnk'] if args.library_names is None else args.library_names
+labels = [names_to_labels[name] for name in names]
 
-nnk_nuc = data_prep.get_nnk_p()
+include_cell_specific = False
 
-nuc_probs = {'lib_b': lib_b_nuc, 'lib_c': lib_c_nuc, 'new_nnk': nnk_nuc, 'old_nnk': nnk_nuc}
+aa_order = [k.upper() for k in SequenceTools.protein2codon_.keys()]
+
+
+def load_counts(filename):
+    counts_file = os.path.join(data_dir, 'counts', filename)
+    counts = pd.read_csv(counts_file)
+    counts = counts.loc[~counts['seq'].str.contains('X')]
+    counts = counts.reset_index()
+    return counts
+
 
 def calc_entropy(counts_df):
     probs = np.array(counts_df['count'] / counts_df['count'].sum())
     entropy = -np.sum(probs*np.log(probs))
     return entropy
 
-# name = 'old_nnk'
-ents = {}
+
+def calc_avg_pairwise_dist(counts_df):
+    result = 0.
+    aas = aa_order
+    for i in range(len(counts_df['seq'][0])):
+        for aa in aas:
+            seq_i = counts_df['seq'].str.get(i)
+            result += counts_df.loc[(seq_i == aa), 'count'].sum() ** 2
+    result = len(counts_df['seq'][0]) - result / (counts_df['count'].sum() ** 2)
+    return result
+
+
+def calc_marginal_counts(counts_df, unique_seq=False):
+    aas = aa_order
+    result = np.zeros((len(counts_df['seq'][0]), len(aas)))
+    for i in range(result.shape[0]):
+        seq_i = counts_df['seq'].str.get(i)
+        for j, aa in enumerate(aas):
+            if unique_seq:
+                result[i][j] = np.sum(1 * (seq_i == aa))
+            else:
+                result[i][j] = counts_df.loc[(seq_i == aa), 'count'].sum()
+    return result
+
+
+def calc_marginal_distributions(counts_df, unique_seq=False):
+    result = calc_marginal_counts(counts_df, unique_seq)
+    result = result / np.sum(result, axis=1).reshape(len(counts_df['seq'][0]), 1)
+    return result
+
+
+def calc_marginal_entropies(counts_df):
+    p = calc_marginal_distributions(counts_df)
+    p_ma = np.ma.masked_where(p==0, p)
+    logp = np.log(p_ma)
+    H = -np.sum(p_ma * logp, axis=1)
+    return H
+
+
+ents_df = defaultdict(list)
 for name in names:
     i = names.index(name)
-    # name = names[i]
     lbl = labels[i]
-
-    pre_counts_file = "../data/counts/%s_pre_counts.csv" % name
-    post_counts_file = "../data/counts/%s_post_counts.csv" % name
-        
-    pre_counts = pd.read_csv(pre_counts_file)
-    post_counts = pd.read_csv(post_counts_file)
-    merged_counts = data_prep.load_data("aav5",
-                                        pre_file=pre_counts_file, 
-                                        post_file=post_counts_file)
-
-    pre_counts = pre_counts.loc[~pre_counts['seq'].str.contains('X')]
-    pre_counts = pre_counts.reset_index()
-
-    post_counts = post_counts.loc[~post_counts['seq'].str.contains('X')]
-    post_counts = post_counts.reset_index()
+    for s in ['pre', 'post']:
+        fname = "%s_%s_counts.csv" % (name, s)
+        counts = load_counts(fname)
+        ent = calc_entropy(counts)
+        marginal_ent = calc_marginal_entropies(counts)
+        marginal_dist = calc_marginal_distributions(counts, unique_seq=True)
+        ents_df['Library'].append(lbl)
+        c = 'initial library' if s == 'pre' else 'packaging selection'
+        ents_df['Condition'].append(c.capitalize())
+        ents_df['Entropy'].append(ent)
+        ents_df['Marginal Distributions'].append(marginal_dist)
+        ents_df['Marginal Entropies'].append(marginal_ent)
     
-    pre_ent = calc_entropy(pre_counts)
-    post_ent = calc_entropy(post_counts)
-    ents[name] = (pre_ent, post_ent)
-    
-    
-titers = {
-    'lib_b': (5.2e11, -1),
-    'lib_c': (2.75e11, -1),
-    'old_nnk': (1.82e11, 4.38e11),
-    'new_nnk': (1.02e11, -1)
-}
+    # Incorporate post-infection data where possible.
+    if name in ['lib_b', 'old_nnk']:
+        cs = ['brain', 'neuron', 'microglia', 'glia'] if include_cell_specific else ['brain']
+        for c in cs:
+            fname = '%s_%s_post_counts.csv' % (c, name.split('_')[1])
+            counts = load_counts(fname)
+            ent = calc_entropy(counts)
+            marginal_ent = calc_marginal_entropies(counts)
+            marginal_dist = calc_marginal_distributions(counts, unique_seq=True)
+            ents_df['Library'].append(lbl)
+            ents_df['Condition'].append('%s infection' % c.capitalize())
+            ents_df['Entropy'].append(ent)
+            ents_df['Marginal Distributions'].append(marginal_dist)
+            ents_df['Marginal Entropies'].append(marginal_ent)
+
+ents_df = pd.DataFrame(data=ents_df)
+ents_df['Effective N'] = np.exp(ents_df['Entropy'])
+print(ents_df)
 
 
-fig, ax = plt.subplots(figsize=(3, 3))
-colors = sns.color_palette('Set1', n_colors=2)
-for i, nm in enumerate(names):
-    lbl = labels[i]
-    ent_pre, ent_post = ents[nm]
-    if i == 0:
-        ax.scatter([i], [ent_pre], c=colors[1], label='Pre', s=30)
-        ax.scatter([i], [ent_post], c=colors[0], label='Post', s=30)
-    else:
-        ax.scatter([i], [ent_post], c=colors[0], s=30)
-        ax.scatter([i], [ent_pre], c=colors[1], s=30)
-    if nm == 'old_nnk':
-        ax.scatter([i], [ent_post], edgecolor='k', facecolor='none', s=40)
-    if nm == 'lib_b':
-        ax.scatter([i], [ent_pre], edgecolor='k', facecolor='none', s=40)
-ax.set_ylabel("Entropy")
-ax.set_xticks([0, 1, 2, 3])
-ax.set_xticklabels(labels, ha='center', fontsize=8)
-ax.legend()
-    
+# Entropy bar plot.
+fig, ax = plt.subplots(figsize=(6, 3))
+sns.barplot(x='Library', y='Entropy', hue='Condition', data=ents_df, order=labels, palette='colorblind', ax=ax)
+plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+ax.set_xlabel('')
 ax.grid(False)
 plt.tight_layout()
 plt.savefig('plots/library_entropies.png', dpi=300, transparent=False, bbox_inches='tight', facecolor='white',)
 plt.close()
 
+
+# Entropy dot plot.
 fig, ax = plt.subplots(figsize=(3, 3))
-colors = sns.color_palette('Set1', n_colors=5)
+colors = sns.color_palette('colorblind', n_colors=3)
 for i, nm in enumerate(names):
     lbl = labels[i]
-    ent_pre, ent_post = ents[nm]
-    titer_pre, titer_post = titers[nm]
-    ax.scatter(ent_pre, titer_pre, label="%s pre" % lbl, c = colors[i])
-    if titer_post != -1:
-        ax.scatter(ent_post, titer_post, label="%s post" % lbl, edgecolor=colors[i], facecolor='none', linewidth=1.5)
-    
-ax.set_xlabel("Entropy")
-ax.set_ylabel("Viral Genome (vm/mL)")
-# ax.set_xticks([0, 1, 2, 3])
-# ax.set_xticklabels(labels, ha='center', fontsize=8)
-ax.legend()
-    
+    ent_pre = ents_df.loc[(ents_df['Library'] == lbl) & (ents_df['Condition'] == 'Initial library'), 'Entropy'].values
+    ent_post = ents_df.loc[(ents_df['Library'] == lbl) & (ents_df['Condition'] == 'Packaging selection'), 'Entropy'].values
+    if nm in ['lib_b', 'old_nnk']:
+        ent_infection = ents_df.loc[(ents_df['Library'] == lbl) & (ents_df['Condition'] == 'Brain infection'), 'Entropy'].values
+    if i == 0:
+        ax.scatter([i], [ent_pre], c=colors[0], label='Initial library', s=30)
+        ax.scatter([i], [ent_post], c=colors[1], label='Packaging selection', s=30)
+    else:
+        ax.scatter([i], [ent_post], c=colors[1], s=30)
+        ax.scatter([i], [ent_pre], c=colors[0], s=30)
+#     if nm == 'old_nnk':
+#         ax.scatter([i], [ent_infection], c=colors[2], s=30)
+#         ax.scatter([i], [ent_post], edgecolor='k', facecolor='none', s=40)
+#     if nm == 'lib_b':
+#         ax.scatter([i], [ent_infection], c=colors[2], label='Brain infection', s=30)
+#         ax.scatter([i], [ent_pre], edgecolor='k', facecolor='none', s=40)
+ax.set_ylabel("Entropy")
+ax.set_xticks(range(len(labels)))
+ax.set_xticklabels(labels, ha='center', fontsize=8)
+ax.legend(fontsize='small')
+ax.set_title('b', fontfamily='serif', loc='left', fontsize='medium')
 ax.grid(False)
 plt.tight_layout()
-plt.savefig('plots/entropies_titers.png', dpi=300, transparent=False, bbox_inches='tight', facecolor='white',)
+plt.savefig('plots/library_entropies_dots.png', dpi=300, transparent=False, bbox_inches='tight', facecolor='white',)
+plt.close()
+
+
+# Figure 6.
+fig = plt.figure(constrained_layout=True, figsize=(8, 4))
+gs = fig.add_gridspec(2, 2)
+ax1 = fig.add_subplot(gs[:, 0])
+ax2 = fig.add_subplot(gs[0, 1])
+ax3 = fig.add_subplot(gs[1, 1])
+heatmap_cmap = sns.color_palette("Blues", as_cmap=True)
+ax = ax1
+inf_df = ents_df[ents_df['Condition'] == 'Brain infection'].reset_index(drop=True)
+sns.barplot(x='Library', y='Effective N', hue='Condition', data=inf_df, order=labels, palette='colorblind', ax=ax)
+#plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+ax.get_legend().remove()
+ax.set_xlabel('')
+ax.set_ylabel('Effective Number of Distinct Sequences', fontsize=16)
+plt.setp(ax.get_xticklabels(), Fontsize=16)
+plt.setp(ax.get_yticklabels(), Fontsize=16)
+ax.grid(False)
+
+ax = ax2
+marginal_dist = ents_df[(ents_df['Library'] == 'Library D2') & (ents_df['Condition'] == 'Brain infection')].reset_index(drop=True)['Marginal Distributions'][0]
+vmax = 1 # vmax = np.amax(marginal_counts)
+im = ax.imshow(marginal_dist, vmin=0, vmax=vmax, cmap=heatmap_cmap, aspect=1)
+#ax.text(-4.5, 6.5, 'b', fontsize=20)
+ax.set_yticks(np.arange(7))
+ax.set_yticklabels(range(7, 0, -1), fontsize=8)
+ax.set_xticks(np.arange(len(aa_order)))
+ax.set_xticklabels(aa_order)
+ax.set_yticks(np.arange(-.5, 7.5, 1), minor=True)
+ax.set_xticks(np.arange(-.5, len(aa_order)+0.5, 1), minor=True)
+ax.grid(which='minor', color='grey', linestyle='-', linewidth=1, alpha=0.2)
+ax.grid(which='major', color='none')
+ax.xaxis.set_ticks_position('none')
+ax.yaxis.set_ticks_position('none')
+ax.set_ylim([-0.5, 6.5])
+divider = make_axes_locatable(ax)
+cax = divider.append_axes('right', size='4%', pad=0.05)
+cbar = fig.colorbar(im, cax=cax, use_gridspec=True)
+cbar.set_ticks([0, 0.5*vmax, vmax])
+ax.set_ylabel('Position', fontsize=14)
+cbar.set_label('Empirical Probability', rotation=270, labelpad=14, fontsize=12)
+ax.set_xlabel('Amino Acid', fontsize=14)
+ax.set_title('Brain Infection', fontsize=14)
+
+ax = ax3
+marginal_dist = ents_df[(ents_df['Library'] == 'Library D2') & (ents_df['Condition'] == 'Packaging selection')].reset_index(drop=True)['Marginal Distributions'][0]
+im = ax.imshow(marginal_dist, vmin=0, vmax=vmax, cmap=heatmap_cmap, aspect=1)
+#ax.text(-4.5, 6.5, 'c', fontsize=20)
+ax.set_yticks(np.arange(7))
+ax.set_yticklabels(range(7, 0, -1), fontsize=8)
+ax.set_xticks(np.arange(len(aa_order)))
+ax.set_xticklabels(aa_order)
+ax.set_yticks(np.arange(-.5, 7.5, 1), minor=True)
+ax.set_xticks(np.arange(-.5, len(aa_order)+0.5, 1), minor=True)
+ax.grid(which='minor', color='grey', linestyle='-', linewidth=1, alpha=0.2)
+ax.grid(which='major', color='none')
+ax.xaxis.set_ticks_position('none')
+ax.yaxis.set_ticks_position('none')
+ax.set_ylim([-0.5, 6.5])
+divider = make_axes_locatable(ax)
+cax = divider.append_axes('right', size='4%', pad=0.05)
+cbar = fig.colorbar(im, cax=cax, use_gridspec=True)
+cbar.set_ticks([0, 0.5*vmax, vmax])
+ax.set_ylabel('Position', fontsize=14)
+cbar.set_label('Empirical Probability', rotation=270, labelpad=14, fontsize=12)
+ax.set_xlabel('Amino Acid', fontsize=14)
+ax.set_title('Packaging Selection')
+
+plt.tight_layout()
+plt.savefig('plots/figure_6.png', dpi=300, transparent=False, bbox_inches='tight', facecolor='white',)
+plt.close()
+
+
+# NNK Heatmaps.
+fig = plt.figure(constrained_layout=True, figsize=(8, 4))
+gs = fig.add_gridspec(2, 2)
+ax1 = fig.add_subplot(gs[:, 0])
+ax2 = fig.add_subplot(gs[0, 1])
+ax3 = fig.add_subplot(gs[1, 1])
+ax = ax3
+marginal_dist = ents_df[(ents_df['Library'] == 'NNK') & (ents_df['Condition'] == 'Packaging selection')].reset_index(drop=True)['Marginal Distributions'][0]
+im = ax.imshow(marginal_dist, vmin=0, vmax=vmax, cmap=heatmap_cmap, aspect=1)
+#ax.text(-4.5, 6.5, 'c', fontsize=20)
+ax.set_yticks(np.arange(7))
+ax.set_yticklabels(range(7, 0, -1), fontsize=8)
+ax.set_xticks(np.arange(len(aa_order)))
+ax.set_xticklabels(aa_order)
+ax.set_yticks(np.arange(-.5, 7.5, 1), minor=True)
+ax.set_xticks(np.arange(-.5, len(aa_order)+0.5, 1), minor=True)
+ax.grid(which='minor', color='grey', linestyle='-', linewidth=1, alpha=0.2)
+ax.grid(which='major', color='none')
+ax.xaxis.set_ticks_position('none')
+ax.yaxis.set_ticks_position('none')
+ax.set_ylim([-0.5, 6.5])
+divider = make_axes_locatable(ax)
+cax = divider.append_axes('right', size='4%', pad=0.05)
+cbar = fig.colorbar(im, cax=cax, use_gridspec=True)
+cbar.set_ticks([0, 0.5*vmax, vmax])
+ax.set_title('Packaging Selection', fontsize=14)
+ax.set_ylabel('Position', fontsize=14)
+cbar.set_label('Empirical Probability', rotation=270, labelpad=14, fontsize=12)
+ax.set_xlabel('Amino Acid', fontsize=14)
+
+ax = ax2
+marginal_dist = ents_df[(ents_df['Library'] == 'NNK') & (ents_df['Condition'] == 'Brain infection')].reset_index(drop=True)['Marginal Distributions'][0]
+im = ax.imshow(marginal_dist, vmin=0, vmax=vmax, cmap=heatmap_cmap, aspect=1)
+#ax.text(-4.5, 6.5, 'c', fontsize=20)
+ax.set_yticks(np.arange(7))
+ax.set_yticklabels(range(7, 0, -1), fontsize=8)
+ax.set_xticks(np.arange(len(aa_order)))
+ax.set_xticklabels(aa_order)
+ax.set_yticks(np.arange(-.5, 7.5, 1), minor=True)
+ax.set_xticks(np.arange(-.5, len(aa_order)+0.5, 1), minor=True)
+ax.grid(which='minor', color='grey', linestyle='-', linewidth=1, alpha=0.2)
+ax.grid(which='major', color='none')
+ax.xaxis.set_ticks_position('none')
+ax.yaxis.set_ticks_position('none')
+ax.set_ylim([-0.5, 6.5])
+divider = make_axes_locatable(ax)
+cax = divider.append_axes('right', size='4%', pad=0.05)
+cbar = fig.colorbar(im, cax=cax, use_gridspec=True)
+cbar.set_ticks([0, 0.5*vmax, vmax])
+ax.set_title('Brain Infection', fontsize=14)
+ax.set_ylabel('Position', fontsize=14)
+cbar.set_label('Empirical Probability', rotation=270, labelpad=14, fontsize=12)
+ax.set_xlabel('Amino Acid', fontsize=14)
+
+plt.tight_layout()
+plt.savefig('plots/nnk_heatmaps.png', dpi=300, transparent=False, bbox_inches='tight', facecolor='white',)
+plt.close()
