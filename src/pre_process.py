@@ -96,11 +96,14 @@ def get_pre_filepath(name):
     """""
     Returns path to raw FASTQ files for pre-selection library
     """""
-    assert name in ['old_nnk', 'new_nnk', 'lib_b', 'lib_c']
+    assert name in ['old_nnk', 'new_nnk', 'lib_b', 'lib_c', 'brain_nnk', 'brain_b', 'neuron_nnk', 'neuron_b', 'microglia_nnk', 'microglia_b', 'glia_nnk', 'glia_b']
     data_dir = 'raw' # path from SLURM submit file
     
     if name == 'old_nnk':
          return os.path.join(data_dir, "5_S5_L001_R1_001.fastq")
+    elif name.split('_')[0] in ['brain', 'neuron', 'microglia', 'glia']:
+        # We currently only have post-infection sequencing data for brain cells
+        return None
     else:
         if name == 'lib_b':
             i = 1
@@ -115,11 +118,31 @@ def get_post_filepath(name):
     """""
     Returns path to raw FASTQ files for post-selection library
     """""
-    assert name in ['old_nnk', 'new_nnk', 'lib_b', 'lib_c']
+    assert name in ['old_nnk', 'new_nnk', 'lib_b', 'lib_c', 'brain_nnk', 'brain_b', 'neuron_nnk', 'neuron_b', 'microglia_nnk', 'microglia_b', 'glia_nnk', 'glia_b']
     data_dir = 'raw' # path from SLURM submit file
     
     if name == 'old_nnk':
          return os.path.join(data_dir, "6_S6_L001_R1_001.fastq")
+    elif 'brain' in name:
+        if name == 'brain_b':
+            i = 1
+        elif name == 'brain_nnk':
+            i = 2
+        return os.path.join(data_dir, "DSBZ00%i_S%i_L002_R1_001.fastq" % (i, i+1))
+    elif name.split('_')[0] in ['neuron', 'microglia', 'glia']:
+        if name == 'neuron_b':
+            i = 1
+        elif name == 'microglia_b':
+            i = 2
+        elif name == 'glia_b':
+            i = 3
+        elif name == 'neuron_nnk':
+            i = 4
+        elif name == 'microglia_nnk':
+            i = 5
+        elif name == 'glia_nnk':
+            i = 6
+        return os.path.join(data_dir, 'DSBZ00%i_S%i_L002_R1_001.fastq' % (i, i + 10))
     else:
         if name == 'lib_b':
             i = 2
