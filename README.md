@@ -25,6 +25,19 @@ cd aav_clean
 ```
 
 ## Demo
+
+To pre-precess the demo sequencing data, run:
+```
+cd data
+python ../src/pre_process.py demo pre -r -c -p 2
+python ../src/pre_process.py demo post -r -c -p 2
+```
+Pre-processing the 'pre-' and 'post-' selection demo data takes ~50 sec each on a standard computer. The expected outputs of these two steps the following four Pandas DataFrames in CSV file format:
+ * `reads/demo_pre_reads.csv`
+ * `reads/demo_post_reads.csv`
+ * `counts/demo_pre_counts.csv`
+ * `counts/demo_post_counts.csv`
+
 TODO:
 * Instructions to run on data
 * Expected Output
@@ -33,4 +46,4 @@ TODO:
 ## Instructions for use
 
 TODO:
- * How to run softward on your data
+ * How to run software on your data
