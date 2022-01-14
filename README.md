@@ -24,7 +24,9 @@ git clone https://github.com/dhbrookes/aav_clean.git
 cd aav_clean
 ```
 
-## Demo
+## Usage
+
+### Data Processing: Demo
 
 To pre-precess the demo sequencing data, run:
 ```
@@ -38,12 +40,28 @@ Pre-processing the 'pre-' and 'post-' selection demo data takes ~0.8 sec each on
  * `counts/demo_pre_counts.csv`
  * `counts/demo_post_counts.csv`
 
-TODO:
-* Instructions to run on data
-* Expected Output
-* Expected run time for demo on normal computer
+### Modeling
 
-## Instructions for use
+Given a pre-processed library, a supervised model can be trained using a command of the form:
+```
+python src/keras_models_run.py library_name model_type
+```
+where `model_type` specifies whether a linear (`'linear'`) or neural network (`'ann'`) model is trained. Information about additional arguments that may be specified (such as model hyperparameters) can be obtained by running
+```
+python src/keras_models_run.py --help
+```
+On a standard computer, it takes ~10 minute to train a standard linear model (CPU-only) on an AAV5 insertion library, and around ~30 minutes to train a reasonable-sized neural network model (CPU-only) on the same library, although train times for the latter are highly hyperparameter-dependent. The expected outputs of a training run are:
+ * a saved Keras model
+ * `{modelname}_test_pred.npy` containing a numpy array of model test predictions
 
-TODO:
- * How to run software on your data
+### Entropy Optimization
+
+Given a trained Keras model, entropy optimization can be performed using a command of the form:
+```
+python src/entropy_opt.py model_path save_path --min_lambda 1 --max_lambda 2.5 --num_lambda 150 --num_iter 3000 --learning_rate 0.01 --num_samples 1000
+```
+Information about additional arguments can be obtained by running
+```
+python src/entropy_opt.py --help
+```
+On a standard computer, it takes ~30 minutes to perform the optimization (CPU-only) for a single `lambda` value. The expected output of an `entropy_opt.py` run is a `{save_path}.npy` file which contains a dictionary containing metadata about the optimization run and, for each `lambda` value, a tuple `(entropy, mean_predict_log_enrichment, optimized_distribution)`.
