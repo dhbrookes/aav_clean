@@ -2,7 +2,9 @@ import pandas as pd
 import numpy as np
 import pre_process
 import entropy_opt
+import modeling
 from seqtools import SequenceTools
+from Bio.Seq import Seq
 from tensorflow import keras
 
 
@@ -68,6 +70,34 @@ def calculate_pre_dist_stats(model_path, enc, n_samples=1000):
     edist_aa = L - np.sum(p_aa**2)
     pd_stats = {'mean_enrichment': mean_enrich,'expected_aa_dist': edist_aa}
     return pd_stats
+
+
+def calculate_no_stop_codon_stats(model_path, enc, n_samples=1000):
+    """
+    Calculates the relevant plotting statistics for the distribution defined
+    by sampling uniformly and then filtering stop codons.
+    """
+    model = keras.models.load_model(model_path)
+    p_uniform = 0.25 * np.ones((21, 4))
+    L = p_uniform.shape[0]
+    x = entropy_opt.sample_sequences(p_uniform, n_samples)
+    aa_seqs = []
+    for i in range(x.shape[0]):
+        seq = x[i]
+        nuc_seq = "".join([pre_process.NUC_ORDER[seq[j]] for j in range(21)])
+        aa_seq = str(Seq(nuc_seq).translate())
+        if '*' not in aa_seq:
+            aa_seqs.append(aa_seq)
+    xgen = modeling.DataGenerator(aa_seqs, np.zeros((len(aa_seqs), 2)), list(range(len(aa_seqs))), enc, batch_size=len(aa_seqs), shuffle=False)
+    fx = model.predict_generator(xgen).reshape(len(aa_seqs), 1, 1)
+    mean_enrich = np.mean(fx)
+
+    edist_aa = 0.
+    for i in range(len(aa_seqs)):
+        for j in range(i+1, len(aa_seqs)):
+            edist_aa += pre_process.hamming_distance(aa_seqs[i], aa_seqs[j])
+    edist_aa = edist_aa / (0.5 * (len(aa_seqs) ** 2 - len(aa_seqs)))
+    return {'mean_enrichment': mean_enrich, 'expected_aa_dist': edist_aa}
 
 
 def get_nnk_p(num_copies=7):

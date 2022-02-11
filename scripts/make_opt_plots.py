@@ -60,7 +60,8 @@ elif meta_data['encoding'] == 'neighbors':
 model_path = meta_data['model_path']
 if model_path == "../models/aav5_ann_100_is":
     model_path = "../models/old_nnk_ann_100_is"
-nnk_stats = opt_analysis.calculate_nnk_stats(model_path, enc, n_samples=10000)
+nnk_stats = opt_analysis.calculate_nnk_stats(model_path, enc, n_samples=int(1e6))
+nsc_stats = opt_analysis.calculate_no_stop_codon_stats(model_path, enc, n_samples=int(1e6))
 
 
 # Make panel
@@ -82,6 +83,7 @@ sc = ax1.scatter(plot_data[x_key], plot_data[y_key],
                 cmap = scatter_cmap
                 )
 ax1.scatter(nnk_stats[x_key], nnk_stats[y_key], c='k', marker='x', label='NNK')
+ax1.scatter(nsc_stats[x_key], nsc_stats[y_key], c='c', marker='x', label='Filtered Uniform')
 
 chosen = [(1, 0.095, ax2, 'D1', 0.02, 0.2), (4, 0.12125, ax3, 'D2', 0.02, 0.2), (11, 0.53,ax4, 'D3', 0.15, 0.0)]
 plot_lbls = ['b', 'c', 'd']
