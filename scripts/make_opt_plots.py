@@ -60,12 +60,12 @@ elif meta_data['encoding'] == 'neighbors':
 model_path = meta_data['model_path']
 if model_path == "../models/aav5_ann_100_is":
     model_path = "../models/old_nnk_ann_100_is"
-nnk_stats = opt_analysis.calculate_nnk_stats(model_path, enc, n_samples=int(1e6))
-nsc_stats = opt_analysis.calculate_no_stop_codon_stats(model_path, enc, n_samples=int(1e6))
+nnk_stats = opt_analysis.calculate_nnk_stats(model_path, enc, n_samples=int(1e4))
+nsc_stats = opt_analysis.calculate_no_stop_codon_stats(model_path, enc, n_samples=int(1e4))
 
 
 # Make panel
-fig = plt.figure(constrained_layout=True, figsize=(8, 4))
+fig = plt.figure(constrained_layout=True, figsize=(8.5, 4.5))
 gs = fig.add_gridspec(3, 2)
 ax1 = fig.add_subplot(gs[:, 0])
 ax2 = fig.add_subplot(gs[0, 1])
@@ -83,7 +83,10 @@ sc = ax1.scatter(plot_data[x_key], plot_data[y_key],
                 cmap = scatter_cmap
                 )
 ax1.scatter(nnk_stats[x_key], nnk_stats[y_key], c='k', marker='x', label='NNK')
+print('NNK', nnk_stats[x_key], nnk_stats[y_key])
 ax1.scatter(nsc_stats[x_key], nsc_stats[y_key], c='c', marker='x', label='Filtered Uniform')
+print('Filtered uniform', nsc_stats[x_key], nsc_stats[y_key])
+ax1.text(-1, 5, 'a', fontsize=20)
 
 chosen = [(1, 0.095, ax2, 'D1', 0.02, 0.2), (4, 0.12125, ax3, 'D2', 0.02, 0.2), (11, 0.53,ax4, 'D3', 0.15, 0.0)]
 plot_lbls = ['b', 'c', 'd']
@@ -96,6 +99,7 @@ for i, l, ax, lbl, pos1, pos2 in chosen:
     ax1.scatter(chosen_plot_data[x_key], chosen_plot_data[y_key], 
                     edgecolor='k', s=20, 
                     linewidth=1, facecolors='none')
+    print(lbl, chosen_plot_data[x_key], chosen_plot_data[y_key])
 
     ax1.text(chosen_plot_data[x_key][0]+0.02, chosen_plot_data[y_key][0]+0.2, lbl, fontsize=16)
     
@@ -110,9 +114,9 @@ for i, l, ax, lbl, pos1, pos2 in chosen:
     ax.text(-4.5, 6.5, plot_lbls[j], fontsize=20)
     # Major ticks
     ax.set_yticks(np.array(range(7)))
-    ax.set_yticklabels(range(7, 0, -1), fontsize=8)
+    ax.set_yticklabels(range(7, 0, -1), fontsize=12)
     ax.set_xticks(np.array(range(len(pre_process.AA_ORDER))))
-    ax.set_xticklabels([a for a in pre_process.AA_ORDER])
+    ax.set_xticklabels([a for a in pre_process.AA_ORDER], fontsize=12)
     ax.set_yticks(np.arange(-.5, 7.5, 1), minor=True)
     ax.set_xticks(np.arange(-.5, len(pre_process.AA_ORDER)+0.5, 1), minor=True)
     ax.grid(which='minor', color='grey', linestyle='-', linewidth=1, alpha=0.2)
@@ -136,6 +140,7 @@ for i, l, ax, lbl, pos1, pos2 in chosen:
 ax1.set_xlabel(fancy_labels[x_key], fontsize=14)
 ax1.set_ylabel(fancy_labels[y_key], fontsize=14)
 ax1.legend()
+plt.setp(ax1.get_legend().get_texts(), fontsize='12')
 ax1.set_xlim([0, 7])
 
 cbar = fig.colorbar(sc, ax=ax1, aspect=50)

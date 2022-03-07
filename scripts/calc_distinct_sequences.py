@@ -16,8 +16,8 @@ plt.rcParams['figure.dpi'] = 200
 plt.rcParams['savefig.dpi'] = 300
 plt.rcParams['lines.linewidth'] = 1.0
 plt.rcParams['axes.grid'] = True
-plt.rcParams['axes.spines.right'] = True
-plt.rcParams['axes.spines.top'] = True
+plt.rcParams['axes.spines.right'] = False
+plt.rcParams['axes.spines.top'] = False
 plt.rcParams['grid.color'] = 'gray'
 plt.rcParams['grid.alpha'] = 0.2
 plt.rcParams['axes.linewidth'] = 0.5
@@ -27,8 +27,8 @@ plt.rcParams['font.family'] = 'STIXGeneral'
 
 # Determine data location and libraries to include on plots.
 parser = argparse.ArgumentParser()
-parser.add_argument('library_names', help='names of libraries to include on plots', nargs='+', type=str)
-parser.add_argument('data_directory', help='full path to directory containing counts files', type=str)
+parser.add_argument('--library_names', help='names of libraries to include on plots', nargs='+', type=str)
+parser.add_argument('--data_directory', help='full path to directory containing counts files', type=str)
 args = parser.parse_args()
 
 data_dir = '../data' if args.data_directory is None else args.data_directory
@@ -113,16 +113,16 @@ results = pd.DataFrame(results)
 
 # Visualize the number of distinct sequences in each library.
 fig, ax = plt.subplots(figsize=(6, 3))
-colors = sns.color_palette('colorblind', n_colors=len(names))
-g = sns.lineplot(x='threshold', y='n_distinct_seq', hue='Library', hue_order=labels[::-1], style='Condition', data=results, palette=colors, ax=ax)
+colors = ['lightgrey', 'blue', 'gold']
+#colors = sns.color_palette('colorblind', n_colors=len(names))
+g = sns.lineplot(x='threshold', y='n_distinct_seq', hue='Condition', hue_order=['Initial', 'Post-Packaging', 'Post-Brain Infection'], style='Library', data=results, palette=colors, ax=ax)
 g.set(yscale='log')
 ax.set_ylabel('Number of Distinct Sequences', fontsize=14)
 ax.set_xlabel('Fraction of Total Reads', fontsize=14)
+plt.setp(ax.get_legend().get_texts(), fontsize='22')
 ls = plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.).get_texts()
 ls[0].set_weight('bold')
-ls[3].set_weight('bold')
-ax.grid(False)
-plt.tight_layout()
+ls[4].set_weight('bold')
 plt.savefig('plots/library_counts.png', dpi=300, transparent=False, bbox_inches='tight', facecolor='white',)
 plt.close()
 

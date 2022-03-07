@@ -16,8 +16,8 @@ rcParams['figure.dpi'] = 200
 rcParams['savefig.dpi'] = 300
 rcParams['lines.linewidth'] = 1.0
 rcParams['axes.grid'] = True
-rcParams['axes.spines.right'] = True
-rcParams['axes.spines.top'] = True
+rcParams['axes.spines.right'] = False
+rcParams['axes.spines.top'] = False
 rcParams['grid.color'] = 'gray'
 rcParams['grid.alpha'] = 0.2
 rcParams['axes.linewidth'] = 0.5
@@ -27,9 +27,9 @@ rcParams['font.family'] = 'STIXGeneral'
 
 # Determine data location and libraries to include on plots.
 parser = argparse.ArgumentParser()
-parser.add_argument('library_names', help='names of libraries to include on plots', nargs='+', type=str)
-parser.add_argument('data_directory', help='full path to directory containing counts files', type=str)
-parser.add_argument('prop_threshold', help='top proportion of variants to be colored', default=0.8, type=float)
+parser.add_argument('--library_names', help='names of libraries to include on plots', nargs='+', type=str)
+parser.add_argument('--data_directory', help='full path to directory containing counts files', type=str)
+parser.add_argument('--prop_threshold', help='top proportion of variants to be colored', default=0.8, type=float)
 args = parser.parse_args()
 
 data_dir = '../data' if args.data_directory is None else args.data_directory
@@ -119,7 +119,7 @@ for i, name in enumerate(names):
     counts_df.loc[pack_brain_condition, 'color'] = 'green'
     ax = axes[i]
     legend = (i == 1)
-    splot = sns.scatterplot(x='freq_pack', y='freq_brain', hue='color', data=counts_df, palette=['lightgrey', 'blue', 'gold', 'green'], hue_order=['_lightgrey', 'blue', 'yellow', 'green'], alpha=.2, legend=legend, ax=ax, linewidth=0, edgecolor='none', s=10)
+    splot = sns.scatterplot(x='freq_pack', y='freq_brain', hue='color', data=counts_df, palette=['lightgrey', 'blue', 'gold', 'green'], hue_order=['_lightgrey', 'blue', 'yellow', 'green'], alpha=.2, legend=legend, ax=ax, linewidth=0, edgecolor='none', s=20)
     splot.set(xscale='log', yscale='log')
     ax.set_xlabel('Post-Packaging Frequency')
     ax.set_ylabel('Post-Infection Frequency')
@@ -127,15 +127,15 @@ for i, name in enumerate(names):
     n_blue, x_blue, y_blue = get_count_annotation_by_color(counts_df, 'blue', np.amax, np.mean)
     n_yellow, x_yellow, y_yellow = get_count_annotation_by_color(counts_df, 'yellow', np.mean, np.amax)
     n_green, x_green, y_green = get_count_annotation_by_color(counts_df, 'green', np.mean, np.amax)
-    ax.annotate(sci_notation(n_blue), (x_blue, y_blue), textcoords='offset pixels', xytext=(0, 10), fontsize=8, color='blue', ha='center')
-    ax.annotate(sci_notation(n_yellow), (x_yellow, y_yellow), textcoords='offset pixels', xytext=(0, 6), fontsize=8, color='gold', ha='center')
-    ax.annotate(sci_notation(n_green), (x_green, y_green), textcoords='offset pixels', xytext=(0, 3), fontsize=8, color='green', ha='center')
+    ax.annotate(sci_notation(n_blue), (x_blue, y_blue), textcoords='offset pixels', xytext=(0, 10), fontsize=10, color='blue', ha='center')
+    ax.annotate(sci_notation(n_yellow), (x_yellow, y_yellow), textcoords='offset pixels', xytext=(0, 6), fontsize=10, color='gold', ha='center')
+    ax.annotate(sci_notation(n_green), (x_green, y_green), textcoords='offset pixels', xytext=(0, 3), fontsize=10, color='green', ha='center')
     ax.grid(False)
     print('{} has {:.3e} blue, {:.3e} yellow, and {:.3e} green'.format(labels[i], n_blue, n_yellow, n_green))
 ls = ax.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.).get_texts()
 ls[0].set_text('Most prevalent post-packaging')
 ls[1].set_text('Most prevalent post-infection')
 ls[2].set_text('Overlap in prevalent variants')
-plt.tight_layout()
+plt.setp(ls, fontsize='12')
 plt.savefig('plots/selection_scatterplots_{}.png'.format(p_threshold), dpi=300, transparent=False, bbox_inches='tight', facecolor='white',)
 plt.close()
