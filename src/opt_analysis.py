@@ -52,9 +52,11 @@ def calculate_nnk_stats(model_path, enc, n_samples=1000):
     p_nnk_aa = np.array(aa_probs_from_nuc_probs(p_nnk))
     
     edist_aa = int(L/3) - np.sum(p_nnk_aa**2)
+
+    entropy_aa = entropy_opt.calc_entropy(p_nnk_aa)
     
     nnk_stats = {'mean_enrichment': mean_enrich,'expected_nuc_dist':edist_nuc, 
-                 'expected_aa_dist': edist_aa}
+            'expected_aa_dist': edist_aa, 'aa_entropy': entropy_aa}
     return nnk_stats
 
 
@@ -68,7 +70,9 @@ def calculate_pre_dist_stats(model_path, enc, n_samples=1000):
     mean_enrich = calculate_mean_enrichment(model, enc, p_aa, n_samples=n_samples, aa=True)
     
     edist_aa = L - np.sum(p_aa**2)
-    pd_stats = {'mean_enrichment': mean_enrich,'expected_aa_dist': edist_aa}
+
+    entropy_aa = entropy_opt.calc_entropy(p_aa)
+    pd_stats = {'mean_enrichment': mean_enrich,'expected_aa_dist': edist_aa, 'aa_entropy': entropy_aa}
     return pd_stats
 
 
@@ -92,12 +96,19 @@ def calculate_no_stop_codon_stats(model_path, enc, n_samples=1000):
     fx = model.predict_generator(xgen).reshape(len(aa_seqs), 1, 1)
     mean_enrich = np.mean(fx)
 
-    edist_aa = 0.
-    for i in range(len(aa_seqs)):
-        for j in range(i+1, len(aa_seqs)):
-            edist_aa += pre_process.hamming_distance(aa_seqs[i], aa_seqs[j])
-    edist_aa = edist_aa / (0.5 * (len(aa_seqs) ** 2 - len(aa_seqs)))
-    return {'mean_enrichment': mean_enrich, 'expected_aa_dist': edist_aa}
+    p_aa = pd.DataFrame(0., index=pre_process.AA_ORDER, columns=range(1, int(L/3)+1))
+    aa_to_cod = SequenceTools.protein2codon_
+    for i in range(int(L / 3)):
+        for aa in pre_process.AA_ORDER:
+            cods = aa_to_cod[aa.lower()]
+            p_aa[i+1].loc[aa] = len(cods)
+    p_aa = np.array(p_aa / p_aa.sum())
+    
+    edist_aa = int(L/3) - np.sum(p_aa**2)
+    
+    entropy_aa = entropy_opt.calc_entropy(p_aa)
+
+    return {'mean_enrichment': mean_enrich, 'expected_aa_dist': edist_aa, 'aa_entropy': entropy_aa}
 
 
 def get_nnk_p(num_copies=7):

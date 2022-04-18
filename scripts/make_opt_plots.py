@@ -72,7 +72,8 @@ ax2 = fig.add_subplot(gs[0, 1])
 ax3 = fig.add_subplot(gs[1, 1])
 ax4 = fig.add_subplot(gs[2, 1])
 cm = plt.cm.get_cmap('plasma')
-x_key='expected_aa_dist'
+#x_key='expected_aa_dist'
+x_key = 'aa_entropy'
 y_key='mean_enrichment'
 scatter_cmap = sns.color_palette("flare", as_cmap=True)
 heatmap_cmap = sns.color_palette("Blues", as_cmap=True)
@@ -83,6 +84,7 @@ sc = ax1.scatter(plot_data[x_key], plot_data[y_key],
                 cmap = scatter_cmap
                 )
 ax1.scatter(nnk_stats[x_key], nnk_stats[y_key], c='k', marker='x', label='NNK')
+print('Library', x_key, y_key)
 print('NNK', nnk_stats[x_key], nnk_stats[y_key])
 ax1.scatter(nsc_stats[x_key], nsc_stats[y_key], c='c', marker='x', label='Filtered Uniform')
 print('Filtered uniform', nsc_stats[x_key], nsc_stats[y_key])
@@ -141,7 +143,8 @@ ax1.set_xlabel(fancy_labels[x_key], fontsize=14)
 ax1.set_ylabel(fancy_labels[y_key], fontsize=14)
 ax1.legend()
 plt.setp(ax1.get_legend().get_texts(), fontsize='12')
-ax1.set_xlim([0, 7])
+if x_key == 'expected_aa_dist':
+    ax1.set_xlim([0, 7])
 
 cbar = fig.colorbar(sc, ax=ax1, aspect=50)
 cbar.set_label("$\lambda$", rotation=0, fontsize=16)
