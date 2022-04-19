@@ -101,7 +101,7 @@ def calculate_no_stop_codon_stats(model_path, enc, n_samples=1000):
     for i in range(int(L / 3)):
         for aa in pre_process.AA_ORDER:
             cods = aa_to_cod[aa.lower()]
-            p_aa[i+1].loc[aa] = len(cods)
+            p_aa[i+1].loc[aa] = 0 if aa == '*' else len(cods)
     p_aa = np.array(p_aa / p_aa.sum())
     
     edist_aa = int(L/3) - np.sum(p_aa**2)
