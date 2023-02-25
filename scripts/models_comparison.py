@@ -6,6 +6,7 @@ import modeling
 import data_prep
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 from scipy.stats import spearmanr, pearsonr
 import pandas as pd
 from functools import reduce
@@ -15,8 +16,8 @@ rcParams['figure.dpi'] = 200
 rcParams['savefig.dpi'] = 300
 rcParams['lines.linewidth'] = 1.0
 rcParams['axes.grid'] = True
-rcParams['axes.spines.right'] = True
-rcParams['axes.spines.top'] = True
+rcParams['axes.spines.right'] = False
+rcParams['axes.spines.top'] = False
 rcParams['grid.color'] = 'gray'
 rcParams['grid.alpha'] = 0.2
 rcParams['axes.linewidth'] = 0.5
@@ -57,17 +58,56 @@ def make_culled_corr_plot(model_lbls, fracs, cs_dict, plot_params, savefile=None
     for lbl in model_lbls:
         cs = cs_dict[lbl]
         prms = plot_params[lbl]
-        ax.plot(fracs, cs,lw=1, **prms)
-    ax.set_xlabel("Fraction of top test sequences")
+        ax.plot(fracs, cs, lw=2, **prms)
+    ax.set_xlabel("K (Fraction of top test sequences)")
     ax.set_ylabel("Pearson correlation")
     fracs2 = [fracs[i] for i in range(len(fracs)) if i % 10 == 0]
     ax.set_xticks(fracs2)
     ax.set_xticklabels(["%.1f" % (1-f) for f in fracs2])
-    ax.legend()
+#     ax.legend(loc='lower left', fontsize=7)
+    ax.legend(fontsize=7, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+#     plt.tight_layout()
+    if savefile is not None:
+        plt.savefig(savefile, dpi=300, bbox_inches='tight')
+    plt.close()
+
+
+def make_paired_plot(ypred, ytest, plot_params, plot_type='histplot', savefile=None):
+    n_test = len(ypred)
+    y_test = ytest[:n_test]
+    sorted_test_idx = np.argsort(y_test)
+    idx = sorted_test_idx[0:]
+    ypred = ypred[idx]
+    ytest = ytest[idx]
+    fig, ax = plt.subplots(figsize=(1.75, 1.75))
+    if plot_type == 'histplot':
+        sns.histplot(x=ypred, y=ytest, stat='density', color=plot_params['c'], edgecolor='none', bins=50, cbar=True, cbar_kws=dict(shrink=.5), ax=ax, pmax=0.1)
+    elif plot_type == 'scatter':
+        ax.scatter(ypred, ytest, s=5, alpha=0.2, edgecolor='none', **plot_params)
+        ax.set_xlim(ax.get_xlim()[0] - 0.25, ax.get_xlim()[1] + 0.25)
+    ax.set_xlabel("\"{}\" Predicted Log Enrichment".format(plot_params['label']), fontsize=7)
+    ax.xaxis.set_tick_params(labelsize=7)
+    ax.set_ylabel("Observed Log Enrichment", fontsize=7)
+    ax.yaxis.set_tick_params(labelsize=7)
+    ax.figure.axes[-1].yaxis.set_tick_params(labelsize=6)
+    sns.regplot(x=ypred, y=ytest, scatter=False, ci=None, color='k', line_kws={'lw': 1, 'ls':'--'}, ax=ax)
+    r, p = pearsonr(ypred, ytest)
+    plt.figtext(0.6, 0.3, 'Pearson={:0.3f} (p={:0.2f})'.format(r, p), ha='center', fontsize=5, color='k') #bbox={'facecolor': 'gray', 'alpha': 0.3, 'pad': 5}
     plt.tight_layout()
     if savefile is not None:
         plt.savefig(savefile, dpi=300)
-    plt.show()
+    plt.close()
+
+
+def make_histogram(preds, plot_params, n_bins='auto', savefile=None):
+    fig, ax = plt.subplots(1, 1, figsize=(2, 2))
+    sns.histplot(x=preds, color=plot_params['c'], ax=ax, legend=False,
+                 bins=n_bins, log_scale=(False, True), edgecolor='none', linewidth=0)
+    ax.set_xlabel("\"{}\" Predicted Log Enrichment".format(plot_params['label']), fontsize=10)
+    plt.tight_layout()
+    if savefile is not None:
+        plt.savefig(savefile, dpi=300, transparent=False, bbox_inches='tight', facecolor='white',)
+    plt.close()
     
     
 # Define some plotting params for different models
@@ -89,8 +129,8 @@ model_lbls = [k for k in plot_params.keys()]
 lib = 'old_nnk'
 test_idx = np.load("../models/%s_test_idx.npy" % lib)
 data_df = data_prep.load_data(lib,   
-                              pre_file ="../data/counts/old_nnk_pre_counts_old.csv",   # these older files contain the correctly index test values
-                              post_file="../data/counts/old_nnk_post_counts_old.csv",
+                              pre_file ="/storage/akosua/aav_clean/data/counts/old_nnk_pre_counts_old.csv",   # these older files contain the correctly index test values
+                              post_file="/storage/akosua/aav_clean/data/counts/old_nnk_post_counts_old.csv",
                               seq_column='aa_seq',
                               count_column='counts')
 seqs, en_scores = data_prep.prepare_data(data_df)
@@ -107,8 +147,15 @@ for lbl in model_lbls:
     print(lbl)
     cs = calculate_culled_correlation(ypred, y_test, fracs)
     culled_spear[lbl] = cs
-    
-    
+    # Make paired plot comparing model predictions to observed log-enrichment.
+    make_paired_plot(ypred, y_test, plot_params[lbl], savefile="plots/%s_%s_paired_plot.png" % (lib, lbl))
+    # Make paired plot comparing observed and predicted log-enrichment of 5 sampled variants.
+    q_idx = np.argsort(ypred)[[int(q * (len(ypred) - 1)) for q in [0, 0.25, 0.5, 0.75, 1.0]]]
+    make_paired_plot(ypred[q_idx], y_test[q_idx], plot_params[lbl],
+                     plot_type='scatter', savefile="plots/%s_%s_paired_plot_quantile_sample.png" % (lib, lbl))
+    # Make histogram of model predictions.
+    make_histogram(ypred, plot_params[lbl], savefile="plots/%s_%s_predictions_histogram.png" % (lib, lbl))
+
 # Make plot comparing models with weighted loss
 make_culled_corr_plot(['ann_100_is', 'ann_200_is', 'ann_500_is', 'ann_1000_is',
                        'linear_is', 'linear_neighbors', 'linear_pairwise'],
