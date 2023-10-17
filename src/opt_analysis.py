@@ -111,6 +111,86 @@ def calculate_no_stop_codon_stats(model_path, enc, n_samples=1000):
     return {'mean_enrichment': mean_enrich, 'expected_aa_dist': edist_aa, 'aa_entropy': entropy_aa}
 
 
+def calc_marginal_counts(counts_df, seq_column='seq', count_column='count', unique_seq=False, aa=False):
+    if aa:
+        alphabet = pre_process.AA_ORDER
+    else:
+        alphabet = pre_process.NUC_ORDER
+    result = np.zeros((len(counts_df[seq_column][0]), len(alphabet)))
+    for i in range(result.shape[0]):
+        seq_i = counts_df[seq_column].str.get(i)
+        for j, aa in enumerate(alphabet):
+            if unique_seq:
+                result[i][j] = np.sum(1 * (seq_i == aa))
+            else:
+                result[i][j] = counts_df.loc[(seq_i == aa), count_column].sum()
+    return result
+
+
+def load_counts_df(counts_file, seq_column='seq'):
+    df = pd.read_csv(counts_file)
+    return df.loc[~df[seq_column].str.contains('X')]
+    
+
+def calculate_empirical_positionwise_stats(model_path, enc, n_samples=1000, threshold=None, pre_file=None, post_file=None):
+    """
+    Calculates the relevant plotting statistics for the distribution defined
+    by sampling according to observed empirical position-wise log-enrichment.
+    """
+    if pre_file is None:
+        pre_file = '/storage/akosua/aav_clean/data/counts/old_nnk_pre_counts_old.csv'
+    if post_file is None:
+        post_file = '/storage/akosua/aav_clean/data/counts/old_nnk_post_counts_old.csv'
+    model = keras.models.load_model(model_path)
+    
+    
+    position_post_counts = calc_marginal_counts(load_counts_df(post_file, seq_column='aa_seq'),
+                                                seq_column='nuc_seq', count_column='counts')
+    position_pre_counts = calc_marginal_counts(load_counts_df(pre_file, seq_column='aa_seq'),
+                                               seq_column='nuc_seq', count_column='counts')
+#     position_enrichment = np.log((position_post_counts / np.sum(position_post_counts, axis=1)[:, np.newaxis])) - np.log((position_pre_counts / np.sum(position_pre_counts, axis=1)[:, np.newaxis]))
+    position_enrichment = (position_post_counts / np.sum(position_post_counts, axis=1)[:, np.newaxis]) / (position_pre_counts / np.sum(position_pre_counts, axis=1)[:, np.newaxis])
+    
+    if threshold is not None:
+        p = np.ones_like(position_enrichment) * (position_enrichment > threshold)
+    else:
+        p = position_enrichment #- np.amin(position_enrichment)
+    p = p / np.sum(p, axis=1)[:, np.newaxis]
+    p_aa = np.array(aa_probs_from_nuc_probs(p))
+    
+    L = position_enrichment.shape[0]
+    mean_enrich = calculate_mean_enrichment(model, enc, p, n_samples=n_samples, aa=False)
+    edist_aa = int(L/3) - np.sum(p_aa**2)
+    entropy_aa = entropy_opt.calc_entropy(p_aa)
+
+    return {'mean_enrichment': mean_enrich, 'expected_aa_dist': edist_aa, 'aa_entropy': entropy_aa}
+
+
+def calculate_no_hydrophobic_stats(model_path, enc, n_samples=1000):
+    """
+    Calculates the relevant plotting statistics for the
+    nucleotide distributions that are optimized to minimize occurence
+    of hydrophobic/disallowed amino acids.
+    """
+    model = keras.models.load_model(model_path)
+    
+    result = {}
+    for f_name in ['nuc_probs_hydro.npy', 'nuc_probs_disallowed.npy']:
+        p = np.load('../results/{}'.format(f_name))
+        p = np.tile(p.T, 7).T
+        
+        L = p.shape[0]
+        mean_enrich = calculate_mean_enrichment(model, enc, p, n_samples=n_samples, aa=False)
+        edist_nuc = L - np.sum(p**2)
+        
+        p_aa = np.array(aa_probs_from_nuc_probs(p))
+        edist_aa = int(L/3) - np.sum(p_aa**2)
+        entropy_aa = entropy_opt.calc_entropy(p_aa)
+        result[f_name] = {'mean_enrichment': mean_enrich,'expected_nuc_dist':edist_nuc, 
+                          'expected_aa_dist': edist_aa, 'aa_entropy': entropy_aa}
+    return result['nuc_probs_hydro.npy'], result['nuc_probs_disallowed.npy']
+
+
 def get_nnk_p(num_copies=7):
     """
     Returns the probabilties of the degeneerate codon NNK.
@@ -202,6 +282,22 @@ def load_data_for_plotting(savefile):
     plot_data = calc_stats_for_plotting(results, aa=aa, savefile=savefile)
     return plot_data, meta_data, results
 
+
+def load_designed_library_probabilities(savefile):
+    """
+    Load the optimization data at savefile and return the designed
+    position-wise nucleotide probabilities.
+    """
+    results = np.load(savefile, allow_pickle=True).item()
+    meta_data = results.pop('meta')
+    aa = meta_data['aa']
+    
+    libraries = {}
+    lambdas = results.keys()
+    for l in lambdas:
+        _, _, thetal = results[l]
+        libraries[l] = entropy_opt.normalize_theta(thetal)
+    return libraries, meta_data
 
 
 def round_percentages(per):

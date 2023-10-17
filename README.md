@@ -65,3 +65,12 @@ Information about additional arguments can be obtained by running
 python src/entropy_opt.py --help
 ```
 On a standard computer, it takes ~30 minutes to perform the optimization (CPU-only) for a single `lambda` value. The expected output of an `entropy_opt.py` run is a `{save_path}.npy` file which contains a dictionary containing metadata about the optimization run and, for each `lambda` value, a tuple `(entropy, mean_predict_log_enrichment, optimized_distribution)`.
+
+### Extracting designed library probabilities
+
+The position-wise nucleotide probabilities required to synthesize any of the libraries designed in [our manuscript](https://www.biorxiv.org/content/10.1101/2021.11.02.467003v2) are stored in `results` and can be easily extracted using the utility provided in `opt_analysis`. For example,
+```
+libraries, metadata = opt_analysis.load_designed_library_probabilities('../results/opt_results_nuc_1.npy')
+libraries[0.25]
+```
+outputs the position-wise nucleotide probabilities for the library designed using our ML-guided approach with the diversity trade-off parameter `lambda=0.25`.
