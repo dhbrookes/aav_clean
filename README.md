@@ -1,4 +1,4 @@
-# Machine learning-based library design improves packaging and diversity of adeno-associated virus (AAV) libraries
+# Code for "Optimal trade-off control in machine learning-based library design, with application to adeno-associated virus (AAV) for gene therapy"
 
 ## Overview
 
