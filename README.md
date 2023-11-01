@@ -1,4 +1,5 @@
 # Code for "Optimal trade-off control in machine learning-based library design, with application to adeno-associated virus (AAV) for gene therapy"
+[![DOI](https://zenodo.org/badge/366600601.svg)](https://zenodo.org/doi/10.5281/zenodo.10064776)
 
 ## Overview
 
